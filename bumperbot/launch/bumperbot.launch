@@ -1,0 +1,36 @@
+<launch>
+
+  <arg name="model" default="$(find bumperbot)/urdf/bumperbot.urdf.xacro"/>
+  <arg name="world" default="$(find bumperbot)/worlds/gazebo_world1.world"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+  <rosparam command ="load" file="$(find bumperbot)/config/bumperbot_controller.yaml"/>
+  <rosparam command ="load" file="$(find joint_state_controller)/joint_state_controller.yaml"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused"        value="false"/>
+    <arg name="use_sim_time"  value="true"/>
+    <arg name="gui"           value="true"/>
+    <arg name="headless"      value="false"/>
+    <arg name="debug"         value="false"/>
+    <arg name="world_name"    value="$(arg world)"/>
+  </include>
+
+  
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+                output="screen" 
+                args="wheel_left_controller wheel_right_controller joint_state_controller"/>
+
+  <node name="spawn_model" pkg="gazebo_ros" type="spawn_model"
+        args="-unpause -urdf -model robot -param robot_description"
+        output="screen" respawn="false"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find bumperbot)/config/display.rviz" />
+
+  <!-- <node name="Handle_LidarData" pkg="bumperbot" type="handledata.py"/>-->
+
+</launch>
